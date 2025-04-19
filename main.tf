@@ -19,75 +19,81 @@ resource "aws_iam_role" "iam_for_lambda" {
         "Principal": {
           "Service": "lambda.amazonaws.com"
         },
-        "Effect": "Allow" ,
+        "Effect": "Allow",
         "Sid": ""
     }
   ]
-    }
+}
 EOF
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = all
+  }
 }
 
 resource "aws_iam_policy" "iam_policy_for_resume_project" {
-
   name        = "aws_iam_policy_for_terraform_resume_project_policy"
-  path        ="/"
+  path        = "/"
   description = "AWS IAM Policy for managing the resume project role"
-    policy = jsonencode(
-    {
+
+  policy = jsonencode({
     "Version": "2012-10-17",
     "Statement": [
-        {
-            "Sid": "ReadWriteTable",
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:BatchGetItem",
-                "dynamodb:GetItem",
-                "dynamodb:Query",
-                "dynamodb:Scan",
-                "dynamodb:BatchWriteItem",
-                "dynamodb:PutItem",
-                "dynamodb:UpdateItem"
-            ],
-            "Resource": "arn:aws:dynamodb:us-east-1:864899855309:table/cloudresume"
-        },
-        {
-            "Sid": "GetStreamRecords",
-            "Effect": "Allow",
-            "Action": "dynamodb:GetRecords",
-            "Resource": "arn:aws:dynamodb:us-east-1:864899855309:table/cloudresume "
-        },
-        {
-            "Sid": "WriteLogStreamsAndGroups",
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogStream",
-                "logs:PutLogEvents"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "CreateLogGroup",
-            "Effect": "Allow",
-            "Action": "logs:CreateLogGroup",
-            "Resource": "*"
-        }
+      {
+        "Sid": "ReadWriteTable",
+        "Effect": "Allow",
+        "Action": [
+          "dynamodb:BatchGetItem",
+          "dynamodb:GetItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem"
+        ],
+        "Resource": "arn:aws:dynamodb:us-east-1:864899855309:table/cloudresume"
+      },
+      {
+        "Sid": "GetStreamRecords",
+        "Effect": "Allow",
+        "Action": "dynamodb:GetRecords",
+        "Resource": "arn:aws:dynamodb:us-east-1:864899855309:table/cloudresume "
+      },
+      {
+        "Sid": "WriteLogStreamsAndGroups",
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Sid": "CreateLogGroup",
+        "Effect": "Allow",
+        "Action": "logs:CreateLogGroup",
+        "Resource": "*"
+      }
     ]
-}  
+  })
 
-    )
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = all
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
-   role = aws_iam_role.iam_for_lambda.name
-   policy_arn = aws_iam_policy.iam_policy_for_resume_project.arn 
-
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.iam_policy_for_resume_project.arn
 }
 
 data "archive_file" "zip" {
-  type        ="zip"
-  source_dir  ="${path.module}/lambda/"
-  output_path ="${path.module}/packedlambda.zip"
-}   
+  type        = "zip"
+  source_dir  = "${path.module}/lambda/"
+  output_path = "${path.module}/packedlambda.zip"
+}
 
 resource "aws_lambda_function_url" "url1" {
   function_name      = aws_lambda_function.myfunc.function_name
@@ -97,9 +103,8 @@ resource "aws_lambda_function_url" "url1" {
     allow_credentials = true
     allow_origins     = ["https://st-lotresume.com"]
     allow_methods     = ["*"]
-    allow_headers     =["date", "keep-alive"]
-    expose_headers    =["keep-alive"]
-    max_age           =86400
+    allow_headers     = ["date", "keep-alive"]
+    expose_headers    = ["keep-alive"]
+    max_age           = 86400
   }
-}  
-# Trigger backend 
+}
