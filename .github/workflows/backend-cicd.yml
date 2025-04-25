@@ -3,9 +3,7 @@ name: Deploy backend Lambda + Terraform
 on:
   push:
     paths:
-      - '**.tf'
-      - 'lambda/**'
-      - '.github/workflows/backend-cicd.yml'
+      - 'infrastruc/**'
     branches:
       - main
 
@@ -13,9 +11,26 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: infrastruc
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Install test dependencies
+        run: pip install boto3 pytest
+
+      - name: Run Lambda unit tests
+        env:
+          PYTHONPATH: .
+        run: pytest lambdafunc/test_lambda_function.py
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
